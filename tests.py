@@ -1,8 +1,10 @@
+## Dummy - Not real tests
+
 from functions.get_files_info import get_files_info
 from functions.get_file_content import get_file_content
 from functions.write_file import write_file
 
-def main():
+def main():    
     working_directory = "calculator"
     # root_contents = get_files_info(working_directory)
     # print(root_contents)
