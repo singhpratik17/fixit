@@ -5,9 +5,6 @@ def get_files_info(working_directory, directory="."):
     abs_working_directory = os.path.abspath(working_directory)
     abs_directory = os.path.abspath(os.path.join(working_directory, directory))
 
-    print(abs_working_directory)
-    print(abs_directory)
-
     if not abs_directory.startswith(abs_working_directory):
         return f'Error: {directory} is not in the working directory.'
     

@@ -7,6 +7,7 @@ from functions.get_files_info import schema_get_files_info
 from functions.get_file_content import schema_get_file_content
 from functions.write_file import schema_write_file
 from functions.run_python_file import schema_run_python_file
+from call_function import call_function
 
 def main():
     load_dotenv()
@@ -38,6 +39,8 @@ def main():
     - Write to a file
     - Run Python file
 
+    Typically start by looking the project files in the working directory, running the required files and tests.
+
     All paths you provide should be relative to the working directory. You do not need to specify the working directory in your function calls as it is automatically injected for security reasons.
     """
 
@@ -55,22 +58,36 @@ def main():
         system_instruction=system_prompt
     )
 
-    response = client.models.generate_content(
-        model='gemini-2.5-flash', 
-        contents=messages,
-        config=config,
-    )
+    max_iterations = 20
+    
+    for i in range(0, max_iterations):
+        response = client.models.generate_content(
+            model='gemini-2.5-flash', 
+            contents=messages,
+            config=config,
+        )
 
-    if verbose and response.usage_metadata:
-        print(f"User Prompt: {prompt}")
-        print(f"Prompt Tokens: {response.usage_metadata.prompt_token_count}")
-        print(f"Response Tokens: {response.usage_metadata.candidates_token_count}")
+        if response is None or response.usage_metadata is None:
+            print("response is malformed")
+            return
 
-    if response.function_calls:
-        print(response.function_calls)
-        for function_call_part in response.function_calls:
-            print(f"Calling function: {function_call_part.name}({function_call_part.args})")
-    else:
-        print("Response:", response.text)
+        if verbose:
+            print(f"User Prompt: {prompt}")
+            print(f"Prompt Tokens: {response.usage_metadata.prompt_token_count}")
+            print(f"Response Tokens: {response.usage_metadata.candidates_token_count}")
+
+        if response.candidates:
+            for candidate in response.candidates:
+                if candidate is None or candidate.content is None:
+                    continue
+                messages.append(candidate.content)
+
+        if response.function_calls:
+            for function_call_part in response.function_calls:
+                result = call_function(function_call_part, verbose)
+                messages.append(result)
+        else:
+            print(response.text)
+            return
 
 main()
